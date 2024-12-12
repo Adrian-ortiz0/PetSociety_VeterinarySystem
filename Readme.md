@@ -118,14 +118,14 @@ El sistema generará facturas en formato PDF o PNG cumpliendo con la normativa d
 ## 🚀 Instalación
 1. Clonar este repositorio:
    ```bash
-   git clone https://github.com/tu_usuario/veterinary-system.git
+   git clone https://github.com/Adrian-ortiz0/PetSociety_VeterinarySystem
    ```
 2. Configurar la base de datos MySQL.
 3. Asegurarse de tener **JDK 17** instalado.
 4. Compilar y ejecutar el proyecto:
    ```bash
-   javac Main.java
-   java Main
+   javac PetSociety.java
+   java PetSociety
    ```
 
 ---
