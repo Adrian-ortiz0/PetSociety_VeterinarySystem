@@ -55,64 +55,78 @@ public class InsumosController {
     return CRUD.updateDB(sqlRestarStock, paramsRestar);
 }
     
-    public static ArrayList<Medicamento> mostrarMedicamentosPorTipo(String tipo) {
-    CRUD.setConexion(ConnectionDB.getConnection());
+    public static ArrayList<Medicamento> mostrarMedicamentosPorTipo(String tipoEspecie) {
+    ArrayList<Medicamento> medicamentosList = new ArrayList<>();
     
     String sql = "SELECT m.ID, m.Tipo, m.TipoEspecie, m.FechaVencimiento, " +
                  "i.Nombre, i.Fabricante, i.UnidadMedida, i.CategoriaID, " +
                  "i.NivelMinimo, i.Stock, i.PrecioUnitario, i.ID_Proveedor " +
                  "FROM Medicamentos m " +
                  "JOIN Insumos i ON m.ID = i.ID " +
-                 "WHERE m.Tipo = ?";
+                 "WHERE m.TipoEspecie = ?";
     
-    ArrayList<Medicamento> medicamentosList = new ArrayList<>();
+    ResultSet rs = null;
     
     try {
-        ResultSet rs = CRUD.consultarDB(sql, tipo);
+        CRUD.setConexion(ConnectionDB.getConnection());
+        
+        rs = CRUD.consultarDB(sql, tipoEspecie);
         
         if (rs != null) {
             while (rs.next()) {
-                int idMedicamento = rs.getInt("ID");
-                String medicamentoTipo = rs.getString("Tipo");
-                String tipoEspecie = rs.getString("TipoEspecie");
-                LocalDate fechaVencimiento = rs.getDate("FechaVencimiento").toLocalDate();
-                
-                String nombre = rs.getString("Nombre");
-                String fabricante = rs.getString("Fabricante");
-                String unidadMedida = rs.getString("UnidadMedida");
-                int categoriaId = rs.getInt("CategoriaID");
-
-                CategoriaInsumos categoria = CategoriaController.obtenerCategoriaPorId(categoriaId);
-                int nivelMinimo = rs.getInt("NivelMinimo");
-                int cantidadStock = rs.getInt("Stock");
-                BigDecimal precioUnitario = rs.getBigDecimal("PrecioUnitario");
-
-                int proveedorId = rs.getInt("ID_Proveedor");
-                Proveedor proveedor = ProveedorController.obtenerProveedorPorId(proveedorId);
-                
-                Medicamento medicamento = new Medicamento(
-                        medicamentoTipo,
-                        tipoEspecie,
-                        fechaVencimiento,
-                        idMedicamento,
-                        nombre,
-                        fabricante,
-                        unidadMedida,
-                        categoria,
-                        nivelMinimo,
-                        cantidadStock,
-                        precioUnitario,
-                        proveedor
-                );
-
+                Medicamento medicamento = crearMedicamentoDesdeBD(rs);
                 medicamentosList.add(medicamento);
             }
         }
     } catch (SQLException ex) {
-        Logger.getLogger(InsumosController.class.getName()).log(Level.SEVERE, null, ex);
+        Logger.getLogger(InsumosController.class.getName()).log(Level.SEVERE, "Error al consultar medicamentos", ex);
+    } finally {
+        if (rs != null) {
+            try {
+                rs.getStatement().getConnection().close();
+            } catch (SQLException ex) {
+                Logger.getLogger(InsumosController.class.getName()).log(Level.SEVERE, "Error al cerrar conexión", ex);
+            }
+        }
     }
-
+    
     return medicamentosList;
+}
+
+private static Medicamento crearMedicamentoDesdeBD(ResultSet rs) throws SQLException {
+    int idMedicamento = rs.getInt("ID");
+    String medicamentoTipo = rs.getString("Tipo");
+    String tipoEspecie = rs.getString("TipoEspecie");
+    LocalDate fechaVencimiento = rs.getDate("FechaVencimiento").toLocalDate();
+    
+    String nombre = rs.getString("Nombre");
+    String fabricante = rs.getString("Fabricante");
+    String unidadMedida = rs.getString("UnidadMedida");
+    
+    int categoriaId = rs.getInt("CategoriaID");
+    CategoriaInsumos categoria = CategoriaController.obtenerCategoriaPorId(categoriaId);
+    
+    int nivelMinimo = rs.getInt("NivelMinimo");
+    int cantidadStock = rs.getInt("Stock");
+    BigDecimal precioUnitario = rs.getBigDecimal("PrecioUnitario");
+    
+    int proveedorId = rs.getInt("ID_Proveedor");
+    Proveedor proveedor = ProveedorController.obtenerProveedorPorId(proveedorId);
+    
+    return new Medicamento(
+        medicamentoTipo,
+        tipoEspecie,
+        fechaVencimiento,
+        idMedicamento,
+        nombre,
+        fabricante,
+        unidadMedida,
+        categoria,
+        nivelMinimo,
+        cantidadStock,
+        precioUnitario,
+        proveedor
+    );
 }
     public static ArrayList<Medicamento> mostrarMedicamentosParaVenta() {
         CRUD.setConexion(ConnectionDB.getConnection());

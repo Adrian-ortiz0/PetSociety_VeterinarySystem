@@ -13,6 +13,7 @@ import com.mycompany.petsociety.models.Medicamento;
 import com.mycompany.petsociety.models.Owner;
 import com.mycompany.petsociety.models.PetHistory;
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.Scanner;
@@ -77,86 +78,99 @@ public class OwnersUI {
     }
 
     public void comprarMeds(Owner owner) {
-        try {
-            System.out.println("Medicamentos para venta: ");
-            ArrayList<Medicamento> medicamentos = InsumosController.mostrarMedicamentosParaVenta();
+    try {
+        System.out.println("Medicamentos para venta: ");
+        ArrayList<Medicamento> medicamentos = InsumosController.mostrarMedicamentosParaVenta();
 
-            if (medicamentos.isEmpty()) {
-                System.out.println("No hay medicamentos disponibles para la venta.");
-                return;
-            }
-
-            ArrayList<Medicamento> carrito = new ArrayList<>();
-            ArrayList<Integer> cantidades = new ArrayList<>();
-
-            while (true) {
-                System.out.println("\nLista de medicamentos disponibles:");
-                for (int i = 0; i < medicamentos.size(); i++) {
-                    Medicamento medicamento = medicamentos.get(i);
-                    System.out.println((i + 1) + ". " + medicamento.getNombre() + " - Precio: " + medicamento.getPrecioUnitario() + " - Stock: " + medicamento.getCantidadStock());
-                }
-
-                System.out.println("\nSeleccione el número del medicamento que desea comprar (o presione 0 para finalizar):");
-                int opcion = scanner.nextInt();
-
-                if (opcion == 0) {
-                    break;
-                }
-
-                if (opcion < 1 || opcion > medicamentos.size()) {
-                    System.out.println("Opción no válida. Intente nuevamente.");
-                    continue;
-                }
-
-                Medicamento seleccionado = medicamentos.get(opcion - 1);
-
-                System.out.println("Ingrese la cantidad que desea comprar del medicamento: " + seleccionado.getNombre());
-                int cantidad = scanner.nextInt();
-
-                if (cantidad <= 0) {
-                    System.out.println("Cantidad no válida. Intente nuevamente.");
-                    continue;
-                }
-
-                if (cantidad > seleccionado.getCantidadStock()) {
-                    System.out.println("No hay suficiente stock para esa cantidad. Stock disponible: " + seleccionado.getCantidadStock());
-                    continue;
-                }
-
-                carrito.add(seleccionado);
-                cantidades.add(cantidad);
-
-                System.out.println("Añadido al carrito: " + seleccionado.getNombre() + " - Cantidad: " + cantidad);
-            }
-
-            if (carrito.isEmpty()) {
-                System.out.println("No se seleccionaron medicamentos para la compra.");
-            } else {
-                System.out.println("\nResumen de la compra:");
-                BigDecimal total = BigDecimal.ZERO;
-                for (int i = 0; i < carrito.size(); i++) {
-                    Medicamento medicamento = carrito.get(i);
-                    int cantidad = cantidades.get(i);
-                    BigDecimal costo = medicamento.getPrecioUnitario().multiply(BigDecimal.valueOf(cantidad));
-                    total = total.add(costo);
-
-                    System.out.println(medicamento.getNombre() + " - Cantidad: " + cantidad + " - Subtotal: " + costo);
-
-                    boolean actualizado = InsumosController.restarCantidadInsumos(medicamento.getId(), cantidad);
-                    if (actualizado) {
-                        medicamento.setCantidadStock(medicamento.getCantidadStock() - cantidad);
-                    } else {
-                        System.out.println("Error al actualizar el stock del medicamento: " + medicamento.getNombre());
-                    }
-                }
-
-                System.out.println("Total a pagar: " + total);
-                FacturaGenerator.generarFacturaPDFCompras(owner.getName(), owner.getCedula(), total, carrito);
-            }
-        } catch (Exception e) {
-            System.out.println("Ocurrió un error al procesar la compra: " + e.getMessage());
+        if (medicamentos.isEmpty()) {
+            System.out.println("No hay medicamentos disponibles para la venta.");
+            return;
         }
+
+        ArrayList<Medicamento> carrito = new ArrayList<>();
+        ArrayList<Integer> cantidades = new ArrayList<>();
+
+        while (true) {
+            System.out.println("\nLista de medicamentos disponibles:");
+            for (int i = 0; i < medicamentos.size(); i++) {
+                Medicamento medicamento = medicamentos.get(i);
+                System.out.println((i + 1) + ". " + medicamento.getNombre() + " - Precio: " + medicamento.getPrecioUnitario() + " - Stock: " + medicamento.getCantidadStock());
+            }
+
+            System.out.println("\nSeleccione el número del medicamento que desea comprar (o presione 0 para finalizar):");
+            int opcion = scanner.nextInt();
+
+            if (opcion == 0) {
+                break;
+            }
+
+            if (opcion < 1 || opcion > medicamentos.size()) {
+                System.out.println("Opción no válida. Intente nuevamente.");
+                continue;
+            }
+
+            Medicamento seleccionado = medicamentos.get(opcion - 1);
+
+            System.out.println("Ingrese la cantidad que desea comprar del medicamento: " + seleccionado.getNombre());
+            int cantidad = scanner.nextInt();
+            seleccionado.setCantidadStock(seleccionado.getCantidadStock() - cantidad);
+
+            if (cantidad <= 0) {
+                System.out.println("Cantidad no válida. Intente nuevamente.");
+                continue;
+            }
+
+            if (cantidad > seleccionado.getCantidadStock()) {
+                System.out.println("No hay suficiente stock para esa cantidad. Stock disponible: " + seleccionado.getCantidadStock());
+                continue;
+            }
+
+            carrito.add(seleccionado);
+            cantidades.add(cantidad);
+
+            System.out.println("Añadido al carrito: " + seleccionado.getNombre() + " - Cantidad: " + cantidad);
+        }
+
+        if (carrito.isEmpty()) {
+            System.out.println("No se seleccionaron medicamentos para la compra.");
+        } else {
+            System.out.println("\nResumen de la compra:");
+            BigDecimal total = BigDecimal.ZERO;
+            for (int i = 0; i < carrito.size(); i++) {
+                Medicamento medicamento = carrito.get(i);
+                int cantidad = cantidades.get(i);
+                BigDecimal costo = medicamento.getPrecioUnitario().multiply(BigDecimal.valueOf(cantidad));
+                total = total.add(costo);
+
+                System.out.println(medicamento.getNombre() + " - Cantidad: " + cantidad + " - Subtotal: " + costo);
+
+                boolean actualizado = InsumosController.restarCantidadInsumos(medicamento.getId(), cantidad);
+                if (actualizado) {
+                    medicamento.setCantidadStock(medicamento.getCantidadStock() - cantidad);
+                } else {
+                    System.out.println("Error al actualizar el stock del medicamento: " + medicamento.getNombre());
+                }
+            }
+
+            System.out.println("Total a pagar: " + total);
+            System.out.println("Generando factura...");
+
+            try {
+                FacturaGenerator.generarFacturaPDFCompras(owner.getName(), owner.getCedula(), total, carrito);
+                System.out.println("Factura generada con éxito.");
+            } catch (Exception e) {
+                System.out.println("Error al generar la factura: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    } catch (InputMismatchException e) {
+        System.out.println("Error: Entrada no válida. Por favor, ingrese un número.");
+        scanner.nextLine(); 
+    } catch (Exception e) {
+        System.out.println("Ocurrió un error inesperado: " + e.getMessage());
+        e.printStackTrace();
     }
+}
 
     public void verMascotasParaAdopcion(Owner owner) {
         try {

@@ -36,7 +36,6 @@ public class FacturaGenerator {
     private static final String FOTO_ROEDOR = "https://static.wikia.nocookie.net/disney/images/7/70/Remy.png/revision/latest/thumbnail/width/360/height/360?cb=20130307114718&path-prefix=es";
     private static final String FOTO_AVE = "https://i.pinimg.com/originals/75/57/f2/7557f21f0a6f4a4831ea2b5f94632a6d.png";
     private static final String CUFE = "636363636363636-J";
-    private static final String QR = "/resources/qr.png";
     
     public static void generarFacturaPDFCompras(String nombreCliente, String cedulaCliente, BigDecimal costoTotal, ArrayList<Medicamento> medicamentosComprados) {
     File directorio = new File("facturas");
@@ -95,11 +94,7 @@ public class FacturaGenerator {
 
             document.add(new Paragraph("\nResumen de la Compra:").setFont(fontBold).setFontSize(12));
             document.add(new Paragraph("Costo Total: " + costoTotal).setFont(fontNormal));
-            Image img = new Image(ImageDataFactory.create(QR));
-                img.setHorizontalAlignment(HorizontalAlignment.CENTER);
-                img.setWidth(60);
-                img.setHeight(60);
-                document.add(img);
+
 
             document.add(new Paragraph("\nNota: Este documento es una representación impresa de la factura electrónica.")
                     .setFont(fontNormal)
